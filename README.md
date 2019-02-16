@@ -2,7 +2,8 @@
 ~ A simple Discord bot to link voice channels to private text channels.  
 ~ Modified somewhat from the
 [original Apexal/Conexus bot](https://github.com/Apexal/conexus)  
-~ Updated the discorbrb dependencies to access the new API call  
+~ Updated the [discordrb](https://github.com/meew0/discordrb) dependencies to
+access the new API call  
 - channel.parent_id to access voice-channel categories  
 
 ~ Added timestamps to output  
