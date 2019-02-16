@@ -11,6 +11,7 @@ require 'fileutils'
 require 'yaml'
 require 'discordrb'
 require 'pry'
+require 'time'
 
 # This hash will store voice channel_ids mapped to text_channel ids
 # {
@@ -30,9 +31,10 @@ OLD_VOICE_STATES = Hash.new
 
 # These are the perms given to people for a associated voice-channel
 TEXT_PERMS = Discordrb::Permissions.new
-TEXT_PERMS.can_read_message_history = true
+TEXT_PERMS.can_read_message_history = false
 TEXT_PERMS.can_read_messages = true
 TEXT_PERMS.can_send_messages = true
+TEXT_PERMS.can_add_reactions = true
 
 BOT = Discordrb::Commands::CommandBot.new token: ARGV.first, client_id: ARGV[1], prefix: '!', advanced_functionality: true
 
@@ -45,10 +47,11 @@ BOT.server_create do |event|
 end
 
 def setup_server(server)
-  puts "Setting up [#{server.name}]"
-  puts 'Trimming associations'
+  puts "\n"
+  puts "#{Time.now.utc.iso8601(3)} - Setting up [#{server.name}]"
+  puts "#{Time.now.utc.iso8601(3)} - Trimming associations"
   trim_associations
-  puts 'Cleaning up after restart'
+  puts "#{Time.now.utc.iso8601(3)} - Cleaning up after restart" + "\n\n"
   server.text_channels.select { |tc| tc.name == SERVER_NAMINGS[server.id] }.each do |tc|
     unless ASSOCIATIONS.values.include?(tc.id)
       tc.delete
@@ -64,7 +67,7 @@ def setup_server(server)
 
   OLD_VOICE_STATES[server.id] = server.voice_states.clone
   BOT.set_user_permission(server.owner.id, 2)
-  puts "Done\n"
+  puts "#{Time.now.utc.iso8601(3)} - Done\n"
 end
 
 def simplify_voice_states(voice_states)
@@ -85,13 +88,13 @@ def associate(voice_channel)
   server = voice_channel.server
   return if voice_channel == server.afk_channel # No need for AFK channel to have associated text-channel
 
-  puts "Associating '#{voice_channel.name} / #{server.name}'"
+  puts "#{Time.now.utc.iso8601(3)} - Associating '#{voice_channel.name} / #{server.name}'"
   text_channel = server.text_channels.find { |tc| tc.id == ASSOCIATIONS[voice_channel.id] }
-
   if text_channel.nil?
-    puts "Not found... creating..."
-    text_channel = server.create_channel(SERVER_NAMINGS[server.id], 0) # Creates a matching text-channel called 'voice-channel'
+    puts "#{Time.now.utc.iso8601(3)} - Not found... creating..."
+    text_channel = server.create_channel("#{voice_channel.name}", 0) # Creates a matching text-channel with the name of the voice channel
     text_channel.topic = "Private chat for all those in the voice-channel [**#{voice_channel.name}**]."
+    text_channel.parent = "#{voice_channel.parent_id}" # Puts the new text channel in the same category as the voice channel
     
     voice_channel.users.each do |u|
       text_channel.define_overwrite(u, TEXT_PERMS, 0)
@@ -106,7 +109,7 @@ def associate(voice_channel)
 end
 
 def handle_user_change(action, voice_channel, user)
-  puts "Handling user #{action} for '#{voice_channel.name} / #{voice_channel.server.name}' for #{user.distinct}"
+  puts "#{Time.now.utc.iso8601(3)} - Handling user #{action} for '#{voice_channel.name} / #{voice_channel.server.name}' for #{user.distinct}"
   text_channel = associate(voice_channel) # This will create it if it doesn't exist. Pretty cool!
 
   # For whatever reason, maybe is AFK channel
@@ -202,9 +205,9 @@ def save
 end
 
 #BOT.invisible
-puts "Oauth url: #{BOT.invite_url}+&permissions=8"
+puts "\nOauth url: #{BOT.invite_url}&permissions=8"
 
 BOT.run :async
 BOT.dnd
-BOT.profile.name = 'conexus'
+BOT.profile.name = 'Bot Ocks'
 BOT.sync
