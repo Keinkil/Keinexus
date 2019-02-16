@@ -1,4 +1,4 @@
-# Conexus 🔗
+# Keinexus 🔗
 ~ A simple Discord bot to link voice channels to private text channels.  
 ~ Modified somewhat from the
 [original Apexal/Conexus bot](https://github.com/Apexal/conexus)  
@@ -48,7 +48,7 @@ This will require you to have a working ruby installation.
 
 To run the program yourself, just clone it and run the following:
 ```sh
-$ git clone git@github.com:Keinkil/conexus.git && cd conexus
+$ git clone git@github.com:Keinkil/Keinexus.git && cd conexus
 $ bundle
 $ ruby bot.rb <token> <client-id>
 ```
