@@ -52,3 +52,12 @@ $ git clone git@github.com:Keinkil/Keinexus.git && cd conexus
 $ bundle
 $ ruby bot.rb <token> <client-id>
 ```
+
+## As a docker image
+I have not uploaded a copy to dockerhub yet, so you're going to have to build
+it locally(or to dockerhub yourself) and then run it.  
+#### To build:
+```docker build -t <tagyouwant> .```  
+
+#### To run:
+```docker run -e TOKEN='<token>' -e CLIENT_ID='<client_id>' <tag>```
