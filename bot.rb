@@ -30,11 +30,18 @@ SERVER_NAMINGS.default = 'voice-channel'
 OLD_VOICE_STATES = Hash.new
 
 # These are the perms given to people for a associated voice-channel
-TEXT_PERMS = Discordrb::Permissions.new
-TEXT_PERMS.can_read_message_history = false
-TEXT_PERMS.can_read_messages = true
-TEXT_PERMS.can_send_messages = true
-TEXT_PERMS.can_add_reactions = true
+ALLOW = Discordrb::Permissions.new
+ALLOW.can_read_message_history = false
+ALLOW.can_read_messages = true
+ALLOW.can_send_messages = true
+ALLOW.can_add_reactions = true
+
+# Set2 
+DENY = Discordrb::Permissions.new
+DENY.can_read_message_history = true
+DENY.can_read_messages = true
+DENY.can_send_messages = true
+DENY.can_add_reactions = true
 
 BOT = Discordrb::Commands::CommandBot.new token: ARGV.first, client_id: ARGV[1], prefix: '!', advanced_functionality: true
 
@@ -87,6 +94,7 @@ end
 def associate(voice_channel)
   server = voice_channel.server
   return if voice_channel == server.afk_channel # No need for AFK channel to have associated text-channel
+  return if voice_channel.id == 438451708348334080
 
   puts "#{Time.now.utc.iso8601(3)} - Associating '#{voice_channel.name} / #{server.name}'"
   text_channel = server.text_channels.find { |tc| tc.id == ASSOCIATIONS[voice_channel.id] }
@@ -97,10 +105,10 @@ def associate(voice_channel)
     text_channel.parent = "#{voice_channel.parent_id}" # Puts the new text channel in the same category as the voice channel
     
     voice_channel.users.each do |u|
-      text_channel.define_overwrite(u, TEXT_PERMS, 0)
+      text_channel.define_overwrite(u, ALLOW, 0)
     end
 
-    text_channel.define_overwrite(voice_channel.server.roles.find { |r| r.id == voice_channel.server.id }, 0, TEXT_PERMS) # Set default perms as invisible
+    text_channel.define_overwrite(voice_channel.server.roles.find { |r| r.id == voice_channel.server.id }, 0, ALLOW) # Set default perms as invisible
     ASSOCIATIONS[voice_channel.id] = text_channel.id # Associate the two 
     save
   end
@@ -116,11 +124,11 @@ def handle_user_change(action, voice_channel, user)
   return if text_channel.nil?
 
   if action == :join
-    text_channel.send_message("**#{user.display_name}** joined the voice-channel.")
-    text_channel.define_overwrite(user, TEXT_PERMS, 0)
+    #text_channel.send_message("**#{user.display_name}** joined the voice-channel.")
+    text_channel.define_overwrite(user, ALLOW, 0)
   else
-    text_channel.send_message("**#{user.display_name}** left the voice-channel.")
-    text_channel.define_overwrite(user, 0, 0)
+    #text_channel.send_message("**#{user.display_name}** left the voice-channel.")
+    text_channel.define_overwrite(user, 0, DENY)
   end
 end
 
