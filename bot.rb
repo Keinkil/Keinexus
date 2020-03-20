@@ -36,7 +36,7 @@ ALLOW.can_read_messages = true
 ALLOW.can_send_messages = true
 ALLOW.can_add_reactions = true
 
-# Set2 
+# Set2
 DENY = Discordrb::Permissions.new
 DENY.can_read_message_history = true
 DENY.can_read_messages = true
@@ -47,7 +47,7 @@ BOT = Discordrb::Commands::CommandBot.new token: ARGV.first, client_id: ARGV[1],
 
 BOT.ready { |event| BOT.servers.each { |_, server| setup_server(server) }; BOT.set_user_permission(152621041976344577, 3) }
 
-BOT.server_create do |event| 
+BOT.server_create do |event|
   event.server.member(event.BOT.profile.id).nick = "🔗"
   event.server.owner.pm("Thank you for using **Conexus**!\nTo change the name of created associated text-channels, type **IN THE SERVER**: `set-name 'new-name-here'`")
   setup_server(event.server)
@@ -71,6 +71,13 @@ def setup_server(server)
   end
 
   server.voice_channels.each { |vc| associate(vc) }
+  server.text_channels.each { |tc| tc.name == SERVER_NAMINGS[server.id] }.each do |tc|
+    if ASSOCIATIONS.values.include?(tc.id)
+      tc.define_overwrite(member, 0, DENY)
+      tc.define_overwrite(non_member, 0, DENY)
+      tc.define_overwrite(everyone, 0, DENY)
+    end
+  end
 
   OLD_VOICE_STATES[server.id] = server.voice_states.clone
   BOT.set_user_permission(server.owner.id, 2)
@@ -80,7 +87,7 @@ end
 def simplify_voice_states(voice_states)
   clone = voice_states.clone
   clone.each { |user_id, state| clone[user_id] = state.voice_channel }
-  
+
   return clone
 end
 
@@ -103,13 +110,13 @@ def associate(voice_channel)
     text_channel = server.create_channel("#{voice_channel.name}", 0) # Creates a matching text-channel with the name of the voice channel
     text_channel.topic = "Private chat for all those in the voice-channel [**#{voice_channel.name}**]."
     text_channel.parent = "#{voice_channel.parent_id}" # Puts the new text channel in the same category as the voice channel
-    
+
     voice_channel.users.each do |u|
       text_channel.define_overwrite(u, ALLOW, 0)
     end
 
     text_channel.define_overwrite(voice_channel.server.roles.find { |r| r.id == voice_channel.server.id }, 0, ALLOW) # Set default perms as invisible
-    ASSOCIATIONS[voice_channel.id] = text_channel.id # Associate the two 
+    ASSOCIATIONS[voice_channel.id] = text_channel.id # Associate the two
     save
   end
 
