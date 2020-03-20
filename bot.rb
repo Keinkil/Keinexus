@@ -23,7 +23,7 @@ ASSOCIATIONS = YAML.load_file('associations.yaml')
 ASSOCIATIONS ||= Hash.new
 
 FileUtils.touch('server_namings.yaml')
-SERVER_NAMINGS = YAML.load_file('server_namings.yaml')
+#SERVER_NAMINGS = YAML.load_file('server_namings.yaml')
 SERVER_NAMINGS ||= Hash.new
 SERVER_NAMINGS.default = 'voice-channel'
 
@@ -70,11 +70,18 @@ def setup_server(server)
     end
   end
 
+  everyone = server.everyone_role
+  member = server.role("member")
+  non_member = server.role("non_member")
   server.voice_channels.each { |vc| associate(vc) }
   server.text_channels.each { |tc| tc.name == SERVER_NAMINGS[server.id] }.each do |tc|
     if ASSOCIATIONS.values.include?(tc.id)
-      tc.define_overwrite(member, 0, DENY)
-      tc.define_overwrite(non_member, 0, DENY)
+      if @member
+        tc.define_overwrite(member, 0, DENY)
+      end
+      if @non_member
+        tc.define_overwrite(non_member, 0, DENY)
+      end
       tc.define_overwrite(everyone, 0, DENY)
     end
   end
@@ -131,11 +138,11 @@ def handle_user_change(action, voice_channel, user)
   return if text_channel.nil?
 
   if action == :join
-    #text_channel.send_message("**#{user.display_name}** joined the voice-channel.")
+#    text_channel.send_message("**#{user.display_name}** joined the voice-channel.")
     text_channel.define_overwrite(user, ALLOW, 0)
   else
-    #text_channel.send_message("**#{user.display_name}** left the voice-channel.")
-    text_channel.define_overwrite(user, 0, DENY)
+#    text_channel.send_message("**#{user.display_name}** left the voice-channel.")
+    text_channel.delete_overwrite(user)
   end
 end
 
